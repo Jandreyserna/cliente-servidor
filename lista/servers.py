@@ -28,7 +28,10 @@ class Servidor:
             if llega[0].decode() == 'preguntar_limite':
                 tokenConsul = pickle.loads(llega[1])
                 separado = self.limite.split(',')
-                if separado[2] != '&':
+                print(self.limite)
+                operador = separado[2]
+                print(operador)
+                if str(operador) != '&':
                     if tokenConsul < int(separado[2]) and tokenConsul > int(separado[1]):
                         if self.token == separado[2]: 
                             """Cuando   """
@@ -137,6 +140,7 @@ class Servidor:
         )
         llega = self.socket_2.recv_multipart()
         self.socket_2.disconnect(self.url_connect)
+        self.limite = pickle.loads(llega[1])
         self.sigt = pickle.loads(llega[2])
         self.ant = pickle.loads(llega[3])
         print(pickle.loads(llega[1]))
