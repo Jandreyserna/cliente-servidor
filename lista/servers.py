@@ -4,6 +4,7 @@ import zmq
 import sys
 import hashlib
 import string
+import os
 
 class Servidor:
     contexto = zmq.Context()
@@ -19,8 +20,17 @@ class Servidor:
         self.socket_1 = self.contexto.socket(zmq.REP)
         self.socket_2 = self.contexto.socket(zmq.REQ)
 
+    def crear_file(self, token):
+        directory = os.getcwd()
+        directory += '/'+str(token) 
+        os.mkdir(directory)
+        
+
     def escuchar(self):
         self.socket_1.bind(self.url_bind)
+        ''' llamar la funcion de crear carpeta '''
+        self.crear_file(self.token)
+
         while True:
             llega = self.socket_1.recv_multipart()
             print(llega[0].decode())
