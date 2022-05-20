@@ -24,88 +24,48 @@ class Servidor:
         directory = os.getcwd()
         directory += '/'+str(token) 
         os.mkdir(directory)
-        
-
-    def escuchar(self):
-        self.socket_1.bind(self.url_bind)
-        ''' llamar la funcion de crear carpeta '''
-        self.crear_file(self.token)
-
-        while True:
-            llega = self.socket_1.recv_multipart()
-            print(llega[0].decode())
-            """ averiguar si es el encargado del limite del token """
-            if llega[0].decode() == 'preguntar_limite':
-                tokenConsul = pickle.loads(llega[1])
-                separado = self.limite.split(',')
-                print(self.limite)
-                operador = separado[2]
-                print(operador)
-                if str(operador) != '&':
-                    if tokenConsul < int(separado[2]) and tokenConsul > int(separado[1]):
-                        if self.token == separado[2]: 
-                            """Cuando   """
-                            self.limite = '(,'+str(tokenConsul)+','+self.token+',]'
-                            limiteRespuesta = separado[0]+','+separado[1]+','+str(tokenConsul)+']'
-                            anterior = self.ant
-                            self.ant = pickle.loads(llega[2])
-                            self.socket_1.send_multipart(
-                                [
-                                    'si'.encode(),
-                                    pickle.dumps(limiteRespuesta),
-                                    pickle.dumps(self.puerto),
-                                    pickle.dumps(anterior),
-                                ]
-                            )
-                        elif self.token > tokenConsul:
-                            self.limite = '(,'+str(tokenConsul)+','+separado[2]+','+separado[3]
-                            limiteRespuesta = separado[0]+','+separado[1]+','+str(tokenConsul)+',]'
-                            anterior = self.ant
-                            self.ant = pickle.loads(llega[2])
-                            self.socket_1.send_multipart(
-                                [
-                                    'si'.encode(),
-                                    pickle.dumps(limiteRespuesta),
-                                    pickle.dumps(self.puerto),
-                                    pickle.dumps(anterior),
-                                ]
-                            )
+    
+    def añadir_server(self, llega):
+        tokenConsul = pickle.loads(llega[1])
+        separado = self.limite.split(',')
+        print(self.limite)
+        operador = separado[2]
+        print(operador)
+        if str(operador) != '&':
+            if tokenConsul < int(separado[2]) and tokenConsul > int(separado[1]):
+                if self.token == separado[2]: 
+                    """Cuando   """
+                    self.limite = '(,'+str(tokenConsul)+','+self.token+',]'
+                    limiteRespuesta = separado[0]+','+separado[1]+','+str(tokenConsul)+']'
+                    anterior = self.ant
+                    self.ant = pickle.loads(llega[2])
+                    self.socket_1.send_multipart(
+                        [
+                            'si'.encode(),
+                            pickle.dumps(limiteRespuesta),
+                            pickle.dumps(self.puerto),
+                            pickle.dumps(anterior),
+                        ]
+                    )
+                elif self.token > tokenConsul:
+                    self.limite = '(,'+str(tokenConsul)+','+separado[2]+','+separado[3]
+                    limiteRespuesta = separado[0]+','+separado[1]+','+str(tokenConsul)+',]'
+                    anterior = self.ant
+                    self.ant = pickle.loads(llega[2])
+                    self.socket_1.send_multipart(
+                        [
+                            'si'.encode(),
+                            pickle.dumps(limiteRespuesta),
+                            pickle.dumps(self.puerto),
+                            pickle.dumps(anterior),
+                        ]
+                    )
                             
-                        else:
-                            self.limite = separado[0]+','+separado[1]+','+str(tokenConsul)+',)'
-                            limiteRespuesta = '[,'+str(tokenConsul)+','+separado[2]+','+separado[3]
-                            siguiente = self.sigt
-                            self.sigt = pickle.loads(llega[2])
-                            self.socket_1.send_multipart(
-                                [
-                                    'si'.encode(),
-                                    pickle.dumps(limiteRespuesta),
-                                    pickle.dumps(siguiente),
-                                    pickle.dumps(self.puerto),
-
-                                ]
-                            )
-
-
-                    elif tokenConsul < int(separado[2]):
-                        self.socket_1.send_multipart(
-                            [
-                                'no'.encode(),
-                                pickle.dumps(self.ant),
-                            ]
-                        )
-                    else:
-                        self.socket_1.send_multipart(
-                            [
-                                'no'.encode(),
-                                pickle.dumps(self.sigt),
-                            ]
-                        )
-                elif tokenConsul > self.token:
-                    self.limite = '[,'+separado[1]+','+str(tokenConsul)+',)'
-                    limiteRespuesta = '[,'+str(tokenConsul)+',&,)'
+                else:
+                    self.limite = separado[0]+','+separado[1]+','+str(tokenConsul)+',)'
+                    limiteRespuesta = '[,'+str(tokenConsul)+','+separado[2]+','+separado[3]
                     siguiente = self.sigt
-                    self.sigt = llega[2]
+                    self.sigt = pickle.loads(llega[2])
                     self.socket_1.send_multipart(
                         [
                             'si'.encode(),
@@ -114,28 +74,123 @@ class Servidor:
                             pickle.dumps(self.puerto),
                         ]
                     )
-                elif int(separado[1]) < tokenConsul:
-                    self.limite = '(,'+str(tokenConsul)+',&,)'
-                    limiteRespuesta = '[,'+separado[1]+','+str(tokenConsul)+',]'
-                    anterior = self.ant
-                    self.ant = llega[2]
+            elif tokenConsul < int(separado[2]):
+                self.socket_1.send_multipart(
+                    [
+                        'no'.encode(),
+                        pickle.dumps(self.ant),
+                    ]
+                )
+            else:
+                self.socket_1.send_multipart(
+                    [
+                        'no'.encode(),
+                        pickle.dumps(self.sigt),
+                    ]
+                )
+        elif tokenConsul > self.token:
+            self.limite = '[,'+separado[1]+','+str(tokenConsul)+',)'
+            limiteRespuesta = '[,'+str(tokenConsul)+',&,)'
+            siguiente = self.sigt
+            self.sigt = pickle.loads(llega[2])
+            self.socket_1.send_multipart(
+                [
+                    'si'.encode(),
+                    pickle.dumps(limiteRespuesta),
+                    pickle.dumps(siguiente),
+                    pickle.dumps(self.puerto),
+                ]
+            )
+        elif int(separado[1]) < tokenConsul:
+            print(self.ant)
+            self.limite = '(,'+str(tokenConsul)+',&,)'
+            limiteRespuesta = '[,'+separado[1]+','+str(tokenConsul)+',]'
+            anterior = self.ant
+            self.ant = pickle.loads(llega[2])
+            self.socket_1.send_multipart(
+                [
+                    'si'.encode(),
+                    pickle.dumps(limiteRespuesta),
+                    pickle.dumps(self.puerto),
+                    pickle.dumps(anterior),                        
+                ]
+            )
+        else:
+            self.socket_1.send_multipart(
+                [
+                    'no'.encode(),
+                    pickle.dumps(self.ant),
+                ]
+            )
+        
+
+    def escuchar(self):
+        self.socket_1.bind(self.url_bind)
+        ''' llamar la funcion de crear carpeta '''
+        self.crear_file(self.token)
+        while True:
+            print('inicio dede aca')
+            llega = self.socket_1.recv_multipart()
+            print('llegue aca')
+            print(llega[0].decode())
+            """ averiguar si es el encargado del limite del token """
+            if llega[0].decode() == 'preguntar_limite':
+                self.añadir_server(llega)
+                print(self.limite)
+            elif llega[0].decode() == 'preguntar_encargado':
+                """ averiguar que server es encargado del token enviado """
+                tokenPregunta = pickle.loads(llega[1])
+                limite = self.limite.split(',')
+                if limite[2] != '&':
+                    if tokenPregunta <= int(limite[2]) and tokenPregunta >= int(limite[1]):
+                        print('entre a la primera opcion')
+                        self.subir_archivo(llega)
+                        self.socket_1.send_multipart(
+                            [
+                                'si'.encode(),
+                                pickle.dumps(self.puerto)
+                            ]
+                        )
+                    elif tokenPregunta < int(limite[1]):
+                        print('entre a la segunda opcion')
+                        self.socket_1.send_multipart(
+                            [
+                                'no'.encode(),
+                                pickle.dumps(self.ant)
+                            ]
+                        )
+                    else:
+                        print('entre a la tercera opcion')
+                        self.socket_1.send_multipart(
+                            [
+                                'no'.encode(),
+                                pickle.dumps(self.sigt)
+                            ]
+                        )
+                elif int(limite[1]) <= tokenPregunta:
+                    print('si la devuelvo')
+                    self.subir_archivo(llega)
                     self.socket_1.send_multipart(
-                        [
-                            'si'.encode(),
-                            pickle.dumps(limiteRespuesta),
-                            pickle.dumps(self.puerto),
-                            pickle.dumps(anterior),
-                            
-                        ]
-                    )
+                            [
+                                'si'.encode(),
+                                pickle.dumps(self.puerto)
+                            ]
+                        )
                 else:
+                    print('entre ultima opcion')
                     self.socket_1.send_multipart(
-                        [
-                            'no'.encode(),
-                            pickle.dumps(self.ant),
-                        ]
-                    )
-            print(self.limite)
+                            [
+                                'no'.encode(),
+                                pickle.dumps(self.ant)
+                            ]
+                        )
+    
+    def subir_archivo(self, llega):
+        nameArchivo = pickle.loads(llega[1])
+        datos = llega[3]
+        arc = open(os.getcwd() + '/' + str(self.token) + '/' + str(nameArchivo) ,'wb')
+        arc.write(llega[3])
+        arc.close()
 
     
     def preguntar(self):
@@ -150,11 +205,14 @@ class Servidor:
         )
         llega = self.socket_2.recv_multipart()
         self.socket_2.disconnect(self.url_connect)
-        self.limite = pickle.loads(llega[1])
-        self.sigt = pickle.loads(llega[2])
-        self.ant = pickle.loads(llega[3])
-        print(pickle.loads(llega[1]))
-        self.escuchar()
+        if llega[0] == 'no':
+            self.url_connect = 'tcp://localhost:' + str(pickle.loads(llega[1]))
+            self.preguntar()
+        else:
+            self.limite = pickle.loads(llega[1])
+            self.sigt = pickle.loads(llega[2])
+            self.ant = pickle.loads(llega[3])
+            self.escuchar()
 
 
 
