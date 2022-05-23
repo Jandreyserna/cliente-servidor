@@ -5,6 +5,7 @@ import sys
 import hashlib
 import string
 import os
+import shutil
 
 class Servidor:
     contexto = zmq.Context()
@@ -143,8 +144,10 @@ class Servidor:
                 limite = self.limite.split(',')
                 if limite[2] != '&':
                     if tokenPregunta <= int(limite[2]) and tokenPregunta >= int(limite[1]):
-                        print('entre a la primera opcion')
-                        self.subir_archivo(llega)
+                        if llega[4].decode() != 'descargar':
+                            self.subir_archivo(llega)
+                        else:
+                            self.bajar_archivo(llega)
                         self.socket_1.send_multipart(
                             [
                                 'si'.encode(),
@@ -169,7 +172,11 @@ class Servidor:
                         )
                 elif int(limite[1]) <= tokenPregunta:
                     print('si la devuelvo')
-                    self.subir_archivo(llega)
+                    if llega[4].decode() != 'descargar':
+                        self.subir_archivo(llega)
+                    else:
+                        self.bajar_archivo(llega)
+                    
                     self.socket_1.send_multipart(
                             [
                                 'si'.encode(),
@@ -187,11 +194,19 @@ class Servidor:
     
     def subir_archivo(self, llega):
         nameArchivo = pickle.loads(llega[1])
-        datos = llega[3]
         arc = open(os.getcwd() + '/' + str(self.token) + '/' + str(nameArchivo) ,'wb')
         arc.write(llega[3])
         arc.close()
-
+    
+    def bajar_archivo(self, llega):
+        URL = os.getcwd() + '/' + str(self.token) + '/' + str(pickle.loads(llega[1]))
+  
+        file = requests.get(URL, stream = True)
+        
+        with open(pickle.loads(llega[3]),"wb") as archivo:
+            for chunk in file.iter_content(chunk_size=1024):
+                if chunk:
+                    archivo.write(chunk)
     
     def preguntar(self):
         self.socket_2 = self.contexto.socket(zmq.REQ)
