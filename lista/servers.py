@@ -199,14 +199,7 @@ class Servidor:
         arc.close()
     
     def bajar_archivo(self, llega):
-        URL = os.getcwd() + '/' + str(self.token) + '/' + str(pickle.loads(llega[1]))
-  
-        file = requests.get(URL, stream = True)
-        
-        with open(pickle.loads(llega[3]),"wb") as archivo:
-            for chunk in file.iter_content(chunk_size=1024):
-                if chunk:
-                    archivo.write(chunk)
+        shutil.copy( str(self.token) + '/' + str(pickle.loads(llega[1])), 'descargas/'+pickle.loads(llega[2]))
     
     def preguntar(self):
         self.socket_2 = self.contexto.socket(zmq.REQ)
