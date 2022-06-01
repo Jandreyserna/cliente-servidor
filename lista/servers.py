@@ -103,7 +103,6 @@ class Servidor:
                 ]
             )
         elif int(separado[1]) < tokenConsul:
-            print(self.ant)
             self.limite = '(,'+str(tokenConsul)+',&,)'
             limiteRespuesta = '[,'+separado[1]+','+str(tokenConsul)+',]'
             anterior = self.ant
@@ -130,9 +129,8 @@ class Servidor:
         ''' llamar la funcion de crear carpeta '''
         self.crear_file(self.token)
         while True:
-            print('inicio dede aca')
             llega = self.socket_1.recv_multipart()
-            print('llegue aca')
+            os.system('cls')
             print(llega[0].decode())
             """ averiguar si es el encargado del limite del token """
             if llega[0].decode() == 'preguntar_limite':
